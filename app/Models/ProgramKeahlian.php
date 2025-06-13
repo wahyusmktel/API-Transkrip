@@ -21,4 +21,9 @@ class ProgramKeahlian extends Model
             $model->id = (string) Str::uuid();
         });
     }
+
+    public function kelas()
+    {
+        return $this->hasMany(MasterKelas::class, 'id_program');
+    }
 }
