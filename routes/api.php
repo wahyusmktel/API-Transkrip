@@ -75,4 +75,5 @@ Route::prefix('siswa')->middleware('auth:sanctum')->group(function () {
     Route::get('/{id}', [SiswaController::class, 'show']);
     Route::put('/{id}', [SiswaController::class, 'update']);
     Route::delete('/{id}', [SiswaController::class, 'destroy']);
+    Route::post('/import', [SiswaController::class, 'import']);
 });

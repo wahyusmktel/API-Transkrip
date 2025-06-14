@@ -22,8 +22,8 @@ class MasterSiswa extends Model
         'tanggal_lahir',
         'nisn',
         'nomor_ijazah',
-        'program_keahlian',
-        'kelas',
+        'program_keahlian_id',
+        'kelas_id',
     ];
 
     protected static function boot()
@@ -32,5 +32,15 @@ class MasterSiswa extends Model
         static::creating(function ($model) {
             $model->id = Str::uuid();
         });
+    }
+
+    public function programKeahlian()
+    {
+        return $this->belongsTo(ProgramKeahlian::class, 'program_keahlian_id');
+    }
+
+    public function kelas()
+    {
+        return $this->belongsTo(MasterKelas::class, 'kelas_id');
     }
 }

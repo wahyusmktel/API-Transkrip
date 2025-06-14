@@ -7,16 +7,32 @@ use App\Http\Controllers\Controller;
 use App\Models\MasterSiswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Imports\SiswaImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SiswaController extends Controller
 {
+    // public function index()
+    // {
+    //     try {
+    //         $siswas = MasterSiswa::latest()->get();
+    //         return response()->json(['data' => $siswas]);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['message' => 'Gagal mengambil data', 'error' => $e->getMessage()], 500);
+    //     }
+    // }
+
     public function index()
     {
         try {
-            $siswas = MasterSiswa::latest()->get();
+            $siswas = MasterSiswa::with(['programKeahlian', 'kelas'])->latest()->get();
+
             return response()->json(['data' => $siswas]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Gagal mengambil data', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Gagal mengambil data',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -29,8 +45,8 @@ class SiswaController extends Controller
                 'tanggal_lahir' => 'nullable|date',
                 'nisn' => 'required|string|max:20|unique:master_siswas',
                 'nomor_ijazah' => 'nullable|string|max:100',
-                'program_keahlian' => 'required|string|max:255',
-                'kelas' => 'required|string|max:100',
+                'program_keahlian_id' => 'required|exists:program_keahlians,id',
+                'kelas_id' => 'required|exists:master_kelas,id',
             ])->validate();
 
             $siswa = MasterSiswa::create($validated);
@@ -61,8 +77,8 @@ class SiswaController extends Controller
                 'tanggal_lahir' => 'nullable|date',
                 'nisn' => 'required|string|max:20|unique:master_siswas,nisn,' . $id,
                 'nomor_ijazah' => 'nullable|string|max:100',
-                'program_keahlian' => 'required|string|max:255',
-                'kelas' => 'required|string|max:100',
+                'program_keahlian_id' => 'required|exists:program_keahlians,id',
+                'kelas_id' => 'required|exists:master_kelas,id',
             ])->validate();
 
             $siswa->update($validated);
@@ -81,6 +97,20 @@ class SiswaController extends Controller
             return response()->json(['message' => 'Data siswa berhasil dihapus']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal menghapus data', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
+
+        try {
+            Excel::import(new SiswaImport, $request->file('file'));
+            return response()->json(['message' => 'Import berhasil.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal import: ' . $e->getMessage()], 500);
         }
     }
 }
