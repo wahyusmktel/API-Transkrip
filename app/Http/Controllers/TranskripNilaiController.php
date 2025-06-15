@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\TranskripNilai;
 use Illuminate\Support\Facades\Validator;
 use App\Models\MasterSiswa;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
+use App\Models\MataPelajaran;
 
 class TranskripNilaiController extends Controller
 {
@@ -148,6 +151,61 @@ class TranskripNilaiController extends Controller
             return response()->json(['message' => 'Data berhasil dihapus']);
         } catch (\Throwable $e) {
             return response()->json(['message' => 'Gagal menghapus data', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function import(Request $request)
+    {
+        try {
+            $validated = Validator::make($request->all(), [
+                'file' => 'required|file|mimes:xlsx,xls|max:5120',
+            ])->validate();
+
+            $file = $request->file('file');
+            $data = Excel::toArray([], $file)[0]; // Ambil sheet pertama
+
+            if (count($data) < 2) {
+                return response()->json(['message' => 'File kosong atau format tidak valid.'], 422);
+            }
+
+            $header = $data[0];
+            $rows = array_slice($data, 1);
+
+            foreach ($rows as $row) {
+                $nisn = $row[2] ?? null;
+
+                if (!$nisn) continue;
+
+                $siswa = MasterSiswa::where('nisn', $nisn)->first();
+                if (!$siswa) continue;
+
+                for ($i = 3; $i < count($header); $i++) {
+                    $namaMapel = $header[$i];
+                    $nilai = $row[$i] ?? null;
+
+                    if ($nilai === null || $nilai === '') continue;
+
+                    $mapel = MataPelajaran::where('nama_mata_pelajaran', $namaMapel)->first();
+                    if (!$mapel) continue;
+
+                    TranskripNilai::updateOrCreate(
+                        [
+                            'siswa_id' => $siswa->id,
+                            'mapel_id' => $mapel->id,
+                        ],
+                        [
+                            'nilai' => floatval($nilai),
+                        ]
+                    );
+                }
+            }
+
+            return response()->json(['message' => 'Import data berhasil.']);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Gagal mengimpor data',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 }

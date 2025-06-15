@@ -85,4 +85,5 @@ Route::prefix('transkrip-nilai')->middleware('auth:sanctum')->group(function () 
     Route::put('/{id}', [TranskripNilaiController::class, 'update']);
     Route::delete('/{id}', [TranskripNilaiController::class, 'destroy']);
     Route::get('/siswa-belum-nilai', [TranskripNilaiController::class, 'siswaBelumAdaNilai']);
+    Route::post('/import', [TranskripNilaiController::class, 'import']);
 });
