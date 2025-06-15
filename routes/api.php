@@ -10,6 +10,7 @@ use App\Http\Controllers\ProgramKeahlianController;
 use App\Http\Controllers\Api\MasterKelasController;
 use App\Http\Controllers\Api\MataPelajaranController;
 use App\Http\Controllers\Api\SiswaController;
+use App\Http\Controllers\TranskripNilaiController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -76,4 +77,12 @@ Route::prefix('siswa')->middleware('auth:sanctum')->group(function () {
     Route::put('/{id}', [SiswaController::class, 'update']);
     Route::delete('/{id}', [SiswaController::class, 'destroy']);
     Route::post('/import', [SiswaController::class, 'import']);
+});
+
+Route::prefix('transkrip-nilai')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [TranskripNilaiController::class, 'index']);
+    Route::post('/', [TranskripNilaiController::class, 'store']);
+    Route::put('/{id}', [TranskripNilaiController::class, 'update']);
+    Route::delete('/{id}', [TranskripNilaiController::class, 'destroy']);
+    Route::get('/siswa-belum-nilai', [TranskripNilaiController::class, 'siswaBelumAdaNilai']);
 });

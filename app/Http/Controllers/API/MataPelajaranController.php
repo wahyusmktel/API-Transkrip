@@ -11,12 +11,25 @@ use App\Imports\MataPelajaranImport;
 
 class MataPelajaranController extends Controller
 {
+    // public function index()
+    // {
+    //     try {
+    //         return response()->json(MataPelajaran::all(), 200);
+    //     } catch (\Throwable $e) {
+    //         return response()->json(['message' => 'Gagal mengambil data'], 500);
+    //     }
+    // }
+
     public function index()
     {
         try {
-            return response()->json(MataPelajaran::all(), 200);
+            $data = MataPelajaran::select('id', 'nama_mata_pelajaran', 'kelompok')->get();
+            return response()->json(['data' => $data], 200);
         } catch (\Throwable $e) {
-            return response()->json(['message' => 'Gagal mengambil data'], 500);
+            return response()->json([
+                'message' => 'Gagal mengambil data',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
