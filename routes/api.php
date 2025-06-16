@@ -87,3 +87,7 @@ Route::prefix('transkrip-nilai')->middleware('auth:sanctum')->group(function () 
     Route::get('/siswa-belum-nilai', [TranskripNilaiController::class, 'siswaBelumAdaNilai']);
     Route::post('/import', [TranskripNilaiController::class, 'import']);
 });
+
+Route::prefix('school-config')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [SchoolConfigController::class, 'show']);
+});

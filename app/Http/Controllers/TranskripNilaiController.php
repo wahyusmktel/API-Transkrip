@@ -10,6 +10,8 @@ use App\Models\MasterSiswa;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
 use App\Models\MataPelajaran;
+use App\Models\SchoolConfig;
+use App\Models\TranscriptConfig;
 
 class TranskripNilaiController extends Controller
 {
@@ -26,7 +28,7 @@ class TranskripNilaiController extends Controller
     public function index()
     {
         try {
-            $data = TranskripNilai::with(['siswa:id,nama_lengkap,nisn,program_keahlian_id', 'siswa.programKeahlian:id,nama_program', 'mapel:id,nama_mata_pelajaran,kelompok'])
+            $data = TranskripNilai::with(['siswa:id,nama_lengkap,nisn,program_keahlian_id,tempat_lahir,tanggal_lahir,nomor_ijazah', 'siswa.programKeahlian:id,nama_program', 'mapel:id,nama_mata_pelajaran,kelompok'])
                 ->get()
                 ->groupBy('siswa_id')
                 ->map(function ($items) {
@@ -36,6 +38,9 @@ class TranskripNilaiController extends Controller
                         'nama_siswa' => $first->siswa->nama_lengkap,
                         'nisn' => $first->siswa->nisn,
                         'program_keahlian' => $first->siswa->programKeahlian->nama_program ?? '-',
+                        'tempat_lahir' => $first->siswa->tempat_lahir ?? '-',
+                        'tanggal_lahir' => $first->siswa->tanggal_lahir ?? '-',
+                        'no_ijazah' => $first->siswa->nomor_ijazah ?? '-',
                         'nilai' => $items->map(function ($item) {
                             return [
                                 'id' => $item->id,
@@ -50,7 +55,17 @@ class TranskripNilaiController extends Controller
                 })
                 ->values(); // convert Collection to array
 
-            return response()->json(['data' => $data], 200);
+            // Ambil konfigurasi tambahan
+            $schoolConfig = SchoolConfig::first();
+            $transcriptConfig = TranscriptConfig::first();
+
+            return response()->json([
+                'data' => $data,
+                'school_config' => $schoolConfig,
+                'transcript_config' => $transcriptConfig,
+            ], 200);
+
+            // return response()->json(['data' => $data], 200);
         } catch (\Throwable $e) {
             return response()->json([
                 'message' => 'Gagal mengambil data',
