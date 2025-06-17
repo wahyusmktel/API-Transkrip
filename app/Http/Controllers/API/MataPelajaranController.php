@@ -23,7 +23,7 @@ class MataPelajaranController extends Controller
     public function index()
     {
         try {
-            $data = MataPelajaran::select('id', 'nama_mata_pelajaran', 'kelompok')->get();
+            $data = MataPelajaran::select('id', 'nama_mata_pelajaran', 'kelompok', 'is_mulok', 'urutan_mapel')->get();
             return response()->json(['data' => $data], 200);
         } catch (\Throwable $e) {
             return response()->json([
@@ -38,7 +38,9 @@ class MataPelajaranController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'nama_mata_pelajaran' => 'required|string|max:255',
-                'kelompok' => 'required|in:Umum,Produktif,Adaptif',
+                'kelompok' => 'required|in:Kelompok Mata Pelajaran Umum,Kelompok Mata Pelajaran Kejuruan',
+                'is_mulok' => 'nullable|boolean',
+                'urutan_mapel' => 'nullable|integer|min:0',
             ]);
 
             if ($validator->fails()) {
@@ -70,7 +72,9 @@ class MataPelajaranController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'nama_mata_pelajaran' => 'required|string|max:255',
-                'kelompok' => 'required|in:Umum,Produktif,Adaptif',
+                'kelompok' => 'required|in:Kelompok Mata Pelajaran Umum,Kelompok Mata Pelajaran Kejuruan',
+                'is_mulok' => 'nullable|boolean',
+                 'urutan_mapel' => 'nullable|integer|min:0',
             ]);
 
             if ($validator->fails()) {

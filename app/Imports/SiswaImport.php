@@ -34,6 +34,7 @@ class SiswaImport implements ToModel, WithHeadingRow
 
         return new MasterSiswa([
             'id' => Str::uuid(),
+            'no_transkrip' => $row['no_transkrip'],
             'nama_lengkap' => $row['nama_lengkap'],
             'tempat_lahir' => $row['tempat_lahir'],
             'tanggal_lahir' => $row['tanggal_lahir'],

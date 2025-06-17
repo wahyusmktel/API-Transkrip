@@ -19,6 +19,8 @@ class MataPelajaran extends Model
         'id',
         'nama_mata_pelajaran',
         'kelompok',
+        'is_mulok',
+        'urutan_mapel',
     ];
 
     protected static function booted()

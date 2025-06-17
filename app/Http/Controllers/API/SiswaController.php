@@ -47,6 +47,7 @@ class SiswaController extends Controller
                 'nomor_ijazah' => 'nullable|string|max:100',
                 'program_keahlian_id' => 'required|exists:program_keahlians,id',
                 'kelas_id' => 'required|exists:master_kelas,id',
+                'no_transkrip' => 'nullable|string|max:100',
             ])->validate();
 
             $siswa = MasterSiswa::create($validated);
@@ -79,6 +80,7 @@ class SiswaController extends Controller
                 'nomor_ijazah' => 'nullable|string|max:100',
                 'program_keahlian_id' => 'required|exists:program_keahlians,id',
                 'kelas_id' => 'required|exists:master_kelas,id',
+                'no_transkrip' => 'nullable|string|max:100',
             ])->validate();
 
             $siswa->update($validated);
