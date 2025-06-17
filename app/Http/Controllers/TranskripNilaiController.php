@@ -28,7 +28,7 @@ class TranskripNilaiController extends Controller
     public function index()
     {
         try {
-            $data = TranskripNilai::with(['siswa:id,nama_lengkap,nisn,program_keahlian_id,tempat_lahir,tanggal_lahir,nomor_ijazah,no_transkrip', 'siswa.programKeahlian:id,nama_program', 'mapel:id,nama_mata_pelajaran,kelompok'])
+            $data = TranskripNilai::with(['siswa:id,nama_lengkap,nisn,program_keahlian_id,tempat_lahir,tanggal_lahir,nomor_ijazah,no_transkrip', 'siswa.programKeahlian:id,nama_program,nama_konsentrasi', 'mapel:id,nama_mata_pelajaran,kelompok'])
                 ->get()
                 ->groupBy('siswa_id')
                 ->map(function ($items) {
@@ -38,6 +38,7 @@ class TranskripNilaiController extends Controller
                         'nama_siswa' => $first->siswa->nama_lengkap,
                         'nisn' => $first->siswa->nisn,
                         'program_keahlian' => $first->siswa->programKeahlian->nama_program ?? '-',
+                        'konsentrasi_keahlian' => $first->siswa->programKeahlian->nama_konsentrasi ?? '-',
                         'tempat_lahir' => $first->siswa->tempat_lahir ?? '-',
                         'tanggal_lahir' => $first->siswa->tanggal_lahir ?? '-',
                         'no_ijazah' => $first->siswa->nomor_ijazah ?? '-',
