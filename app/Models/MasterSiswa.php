@@ -23,6 +23,7 @@ class MasterSiswa extends Model
         'nisn',
         'nomor_ijazah',
         'no_transkrip',
+        'pdf_transkrip_filename',
         'program_keahlian_id',
         'kelas_id',
     ];

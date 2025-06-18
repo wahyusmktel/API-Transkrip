@@ -13,6 +13,10 @@ use App\Models\MataPelajaran;
 use App\Models\SchoolConfig;
 use App\Models\TranscriptConfig;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Container\Attributes\Log;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class TranskripNilaiController extends Controller
 {
@@ -218,18 +222,111 @@ class TranskripNilaiController extends Controller
         }
     }
 
-    public function generatePdf($siswaId)
+    // public function generatePdf($siswaId)
+    // {
+    //     $siswa = MasterSiswa::with('transkripNilai.mapel')->findOrFail($siswaId);
+    //     $schoolConfig = SchoolConfig::first();
+    //     $transcriptConfig = TranscriptConfig::first();
+
+    //     $pdf = Pdf::loadView('pdf.transkrip', [
+    //         'siswa' => $siswa,
+    //         'schoolConfig' => $schoolConfig,
+    //         'transcriptConfig' => $transcriptConfig,
+    //     ])->setPaper('a4', 'portrait');
+
+    //     return $pdf->download("Transkrip_{$siswa->nama_lengkap}.pdf");
+    // }
+
+    public function generateAndStorePdf($siswaId)
     {
         $siswa = MasterSiswa::with('transkripNilai.mapel')->findOrFail($siswaId);
         $schoolConfig = SchoolConfig::first();
         $transcriptConfig = TranscriptConfig::first();
 
+        $groupedNilai = collect($siswa->transkripNilai)
+            ->sortBy(function ($item) {
+                return $item->mapel->urutan_mapel ?? 9999;
+            })
+            ->groupBy(function ($item) {
+                // Muatan lokal tetap digabung ke kelompok aslinya
+                return $item->mapel->kelompok ?? 'Lainnya';
+            });
+
+        $filename = "transkrip_{$siswa->id}.pdf";
+        $path = "public/transkrip/{$filename}";
+
+        // === Convert watermark image to base64 ===
+        $watermarkBase64 = null;
+        if ($schoolConfig && $schoolConfig->watermark) {
+            if (Storage::disk('public')->exists($schoolConfig->watermark)) {
+                $watermarkPath = Storage::disk('public')->path($schoolConfig->watermark);
+                $watermarkBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($watermarkPath));
+                \Log::info('Base64 Watermark generated successfully.');
+            } else {
+                $watermarkBase64 = null;
+                \Log::warning('Watermark file not found: ' . $schoolConfig->watermark);
+            }
+        }
+
+        // === Convert kop sekolah image to base64 ===
+        $kopBase64 = null;
+        if ($schoolConfig && $schoolConfig->kop_sekolah) {
+            if (Storage::disk('public')->exists($schoolConfig->kop_sekolah)) {
+                $kopPath = Storage::disk('public')->path($schoolConfig->kop_sekolah);
+                $kopBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($kopPath));
+            } else {
+                \Log::warning('Kop Sekolah file not found: ' . $schoolConfig->kop_sekolah);
+            }
+        }
+
+        \Log::info('Base64 Watermark:', [$watermarkBase64]);
+
+        // Generate PDF
         $pdf = Pdf::loadView('pdf.transkrip', [
             'siswa' => $siswa,
             'schoolConfig' => $schoolConfig,
             'transcriptConfig' => $transcriptConfig,
+            'watermarkBase64' => $watermarkBase64,
+            'kopBase64' => $kopBase64,
+            'groupedNilai' => $groupedNilai,
         ])->setPaper('a4', 'portrait');
 
-        return $pdf->download("Transkrip_{$siswa->nama_lengkap}.pdf");
+        // Simpan file ke storage
+        Storage::put($path, $pdf->output());
+
+        // Update kolom pdf_transkrip_filename di tabel siswa
+        $siswa->pdf_transkrip_filename = $filename;
+        $siswa->save();
+
+        return response()->json([
+            'message' => 'PDF berhasil digenerate, disimpan, dan diperbarui ke database.',
+            'filename' => $filename,
+        ]);
+    }
+
+    public function downloadStoredPdf($siswaId)
+    {
+        $siswa = MasterSiswa::findOrFail($siswaId);
+
+        // Cek apakah file PDF sudah pernah digenerate dan disimpan di DB
+        if (!$siswa->pdf_transkrip_filename) {
+            return response()->json([
+                'message' => 'PDF belum digenerate. Silakan generate terlebih dahulu.'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $filename = $siswa->pdf_transkrip_filename;
+        $path = storage_path("app/private/public/transkrip/{$filename}");
+
+        if (!file_exists($path)) {
+            return response()->json([
+                'message' => 'File PDF tidak ditemukan di storage. Silakan generate ulang.'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->download($path, $filename, [
+            'Content-Type' => 'application/pdf',
+            'Access-Control-Allow-Origin' => '*',
+        ]);
     }
 }

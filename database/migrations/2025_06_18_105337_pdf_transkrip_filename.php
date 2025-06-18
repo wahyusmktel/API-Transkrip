@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('master_siswas', function (Blueprint $table) {
-            $table->string('no_transkrip')->nullable()->after('nomor_ijazah');
+            $table->string('pdf_transkrip_filename')->nullable()->after('no_transkrip');
         });
     }
 
     public function down(): void
     {
         Schema::table('master_siswas', function (Blueprint $table) {
-            $table->dropColumn('no_transkrip');
+            $table->dropColumn('pdf_transkrip_filename');
         });
     }
 };

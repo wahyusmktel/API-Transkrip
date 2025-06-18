@@ -86,7 +86,9 @@ Route::prefix('transkrip-nilai')->middleware('auth:sanctum')->group(function () 
     Route::delete('/{id}', [TranskripNilaiController::class, 'destroy']);
     Route::get('/siswa-belum-nilai', [TranskripNilaiController::class, 'siswaBelumAdaNilai']);
     Route::post('/import', [TranskripNilaiController::class, 'import']);
-    // Route::get('/{siswa}/pdf', [TranskripNilaiController::class, 'generatePdf']);
+
+    Route::post('/{siswa}/generate-pdf', [TranskripNilaiController::class, 'generateAndStorePdf']);
+    Route::get('/{siswa}/download-pdf', [TranskripNilaiController::class, 'downloadStoredPdf']);
 });
 
 Route::prefix('school-config')->middleware('auth:sanctum')->group(function () {
