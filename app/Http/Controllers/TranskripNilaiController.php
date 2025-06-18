@@ -12,18 +12,10 @@ use Illuminate\Support\Str;
 use App\Models\MataPelajaran;
 use App\Models\SchoolConfig;
 use App\Models\TranscriptConfig;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TranskripNilaiController extends Controller
 {
-    // public function index()
-    // {
-    //     try {
-    //         $data = TranskripNilai::with(['siswa:id,nama_lengkap,nisn', 'mapel:id,nama_mata_pelajaran'])->latest()->get();
-    //         return response()->json(['data' => $data]);
-    //     } catch (\Throwable $e) {
-    //         return response()->json(['message' => 'Gagal mengambil data', 'error' => $e->getMessage()], 500);
-    //     }
-    // }
 
     public function index()
     {
@@ -223,5 +215,20 @@ class TranskripNilaiController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function generatePdf($siswaId)
+    {
+        $siswa = MasterSiswa::with('transkripNilai.mapel')->findOrFail($siswaId);
+        $schoolConfig = SchoolConfig::first();
+        $transcriptConfig = TranscriptConfig::first();
+
+        $pdf = Pdf::loadView('pdf.transkrip', [
+            'siswa' => $siswa,
+            'schoolConfig' => $schoolConfig,
+            'transcriptConfig' => $transcriptConfig,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download("Transkrip_{$siswa->nama_lengkap}.pdf");
     }
 }

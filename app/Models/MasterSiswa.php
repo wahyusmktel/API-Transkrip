@@ -44,4 +44,9 @@ class MasterSiswa extends Model
     {
         return $this->belongsTo(MasterKelas::class, 'kelas_id');
     }
+
+    public function transkripNilai()
+    {
+        return $this->hasMany(TranskripNilai::class, 'siswa_id');
+    }
 }
