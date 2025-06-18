@@ -219,7 +219,8 @@
                             @if (!$showMulokHeader)
                                 {{-- Baris judul Muatan Lokal --}}
                                 <tr>
-                                    <td style="text-align:center;">{{ $no++ }}</td>
+                                    <td rowspan="3" style="text-align:center; vertical-align: top;">
+                                        {{ $no++ }}</td>
                                     <td colspan="2"><strong>Muatan Lokal</strong></td>
                                 </tr>
                                 @php
@@ -229,8 +230,8 @@
                             @endif
 
                             <tr>
-                                <td style="text-align:center;">{{ $abjad++ }}.</td>
-                                <td>{{ $item->mapel->nama_mata_pelajaran }}</td>
+
+                                <td>{{ $abjad++ }}. {{ $item->mapel->nama_mata_pelajaran }}</td>
                                 <td style="text-align:center;">{{ $item->nilai }}</td>
                             </tr>
                         @else
