@@ -73,7 +73,7 @@
         th,
         td {
             border: 1px solid #555;
-            padding: 2px;
+            padding: 1px;
             font-size: 12px;
         }
 
@@ -87,8 +87,9 @@
         }
 
         .ttd {
-            text-align: right;
-            margin-top: 40px;
+            text-align: left;
+            margin-top: 20px;
+            margin-left: 530px;
         }
 
         .ttd p {
@@ -168,51 +169,31 @@
                 {{ $siswa->programKeahlian->nama_konsentrasi ?? '-' }}</div>
         </div>
 
-        {{-- Tabel Nilai --}}
-        {{-- <table>
-            <thead>
-                <tr>
-                    <th style="width: 5%; text-align:center;">No</th>
-                    <th style="width: 50%; text-align:center;">Mata Pelajaran</th>
-                    <th style="width: 10%; text-align:center;">Nilai</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($siswa->transkripNilai as $index => $nilai)
-                    <tr>
-                        <td style="text-align:center;">{{ $index + 1 }}</td>
-                        <td>{{ $nilai->mapel->nama_mata_pelajaran }}</td>
-                        <td style="text-align:center;">{{ $nilai->nilai }}</td>
-                    </tr>
-                @endforeach
-                <tr class="rata-rata">
-                    <td colspan="2" style="text-align: center;">Rata-rata</td>
-                    <td style="text-align:center;">
-                        {{ round($siswa->transkripNilai->avg('nilai'), 2) }}
-                    </td>
-                </tr>
-            </tbody>
-        </table> --}}
-
         <table>
             <thead>
                 <tr>
                     <th style="width: 5%; text-align:center;">No</th>
                     <th style="width: 50%; text-align:center;">Mata Pelajaran</th>
-                    <th style="width: 10%; text-align:center;">Nilai</th>
+                    <th style="width: 20%; text-align:center;">Nilai</th>
                 </tr>
             </thead>
             <tbody>
                 @php
-                    $no = 1;
-                    $showMulokHeader = false;
-                    $abjad = 'a';
+                    $groupChar = 'A';
                 @endphp
 
                 @foreach ($groupedNilai as $kelompok => $mapels)
+                    @php
+                        $no = 1;
+                        $showMulokHeader = false;
+                        $abjad = 'a';
+                    @endphp
                     <tr>
-                        <td colspan="3" style="font-weight:bold; background-color:#f2f2f2;">{{ $kelompok }}</td>
+                        <td colspan="3" style="font-weight:bold; background-color:#f2f2f2; padding-left: 15px;">
+                            {{ $groupChar }}. {{ $kelompok }}</td>
                     </tr>
+
+                    @php $groupChar++; @endphp
 
                     @foreach ($mapels as $index => $item)
                         @if ($item->mapel->is_mulok)
