@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\MasterKelasController;
 use App\Http\Controllers\Api\MataPelajaranController;
 use App\Http\Controllers\Api\SiswaController;
 use App\Http\Controllers\TranskripNilaiController;
+use App\Http\Controllers\StatistikController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -93,4 +94,8 @@ Route::prefix('transkrip-nilai')->middleware('auth:sanctum')->group(function () 
 
 Route::prefix('school-config')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [SchoolConfigController::class, 'show']);
+});
+
+Route::prefix('statistik')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [StatistikController::class, 'index']);
 });
