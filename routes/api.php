@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\MataPelajaranController;
 use App\Http\Controllers\Api\SiswaController;
 use App\Http\Controllers\TranskripNilaiController;
 use App\Http\Controllers\StatistikController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -98,4 +99,8 @@ Route::prefix('school-config')->middleware('auth:sanctum')->group(function () {
 
 Route::prefix('statistik')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [StatistikController::class, 'index']);
+});
+
+Route::prefix('dashboard')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [DashboardController::class, 'index']);
 });
