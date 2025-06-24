@@ -13,10 +13,11 @@ use App\Models\MataPelajaran;
 use App\Models\SchoolConfig;
 use App\Models\TranscriptConfig;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Container\Attributes\Log;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use ZipArchive;
 
 class TranskripNilaiController extends Controller
 {
@@ -261,10 +262,10 @@ class TranskripNilaiController extends Controller
             if (Storage::disk('public')->exists($schoolConfig->watermark)) {
                 $watermarkPath = Storage::disk('public')->path($schoolConfig->watermark);
                 $watermarkBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($watermarkPath));
-                \Log::info('Base64 Watermark generated successfully.');
+                Log::info('Base64 Watermark generated successfully.');
             } else {
                 $watermarkBase64 = null;
-                \Log::warning('Watermark file not found: ' . $schoolConfig->watermark);
+                Log::warning('Watermark file not found: ' . $schoolConfig->watermark);
             }
         }
 
@@ -275,11 +276,11 @@ class TranskripNilaiController extends Controller
                 $kopPath = Storage::disk('public')->path($schoolConfig->kop_sekolah);
                 $kopBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($kopPath));
             } else {
-                \Log::warning('Kop Sekolah file not found: ' . $schoolConfig->kop_sekolah);
+                Log::warning('Kop Sekolah file not found: ' . $schoolConfig->kop_sekolah);
             }
         }
 
-        \Log::info('Base64 Watermark:', [$watermarkBase64]);
+        Log::info('Base64 Watermark:', [$watermarkBase64]);
 
         // Generate PDF
         $pdf = Pdf::loadView('pdf.transkrip', [
@@ -329,4 +330,90 @@ class TranskripNilaiController extends Controller
             'Access-Control-Allow-Origin' => '*',
         ]);
     }
+
+    public function cetakMasal(Request $request)
+    {
+        ini_set('max_execution_time', 300); // 300 detik (5 menit)
+        Log::info("Memulai proses cetak masal...");
+
+        $siswas = MasterSiswa::with('transkripNilai.mapel')->get();
+        Log::info("Jumlah siswa yang akan diproses: " . $siswas->count());
+
+        $schoolConfig = SchoolConfig::first();
+        $transcriptConfig = TranscriptConfig::first();
+
+        $zipFilename = 'transkrip_masal.zip';
+        $zipPath = storage_path("app/public/transkrip/{$zipFilename}");
+        Log::info("Lokasi file ZIP: " . $zipPath);
+
+        $zip = new ZipArchive;
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            foreach ($siswas as $siswa) {
+                try {
+                    $groupedNilai = collect($siswa->transkripNilai)
+                        ->sortBy(fn($item) => $item->mapel->urutan_mapel ?? 9999)
+                        ->groupBy(fn($item) => $item->mapel->kelompok ?? 'Lainnya');
+
+                    Log::info("Sedang membuat PDF untuk: " . $siswa->nama_lengkap);
+
+                    // === Convert watermark image to base64 ===
+                    $watermarkBase64 = null;
+                    if ($schoolConfig && $schoolConfig->watermark) {
+                        if (Storage::disk('public')->exists($schoolConfig->watermark)) {
+                            $watermarkPath = Storage::disk('public')->path($schoolConfig->watermark);
+                            $watermarkBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($watermarkPath));
+                            Log::info('Base64 Watermark generated successfully.');
+                        } else {
+                            Log::warning('Watermark file not found: ' . $schoolConfig->watermark);
+                        }
+                    }
+
+                    // === Convert kop sekolah image to base64 ===
+                    $kopBase64 = null;
+                    if ($schoolConfig && $schoolConfig->kop_sekolah) {
+                        if (Storage::disk('public')->exists($schoolConfig->kop_sekolah)) {
+                            $kopPath = Storage::disk('public')->path($schoolConfig->kop_sekolah);
+                            $kopBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($kopPath));
+                            Log::info('Base64 Kop Sekolah generated successfully.');
+                        } else {
+                            Log::warning('Kop Sekolah file not found: ' . $schoolConfig->kop_sekolah);
+                        }
+                    }
+
+                    $pdf = Pdf::loadView('pdf.transkrip', [
+                        'siswa' => $siswa,
+                        'schoolConfig' => $schoolConfig,
+                        'transcriptConfig' => $transcriptConfig,
+                        'watermarkBase64' => $watermarkBase64,
+                        'kopBase64' => $kopBase64,
+                        'groupedNilai' => $groupedNilai,
+                    ])->setPaper('a4', 'portrait');
+
+                    $pdfContent = $pdf->output();
+
+                    $pdfFileName = 'Transkrip_' . preg_replace('/[^A-Za-z0-9]/', '_', $siswa->nama_lengkap) . '.pdf';
+                    Log::info("Menambahkan ke ZIP: " . $pdfFileName);
+
+                    $zip->addFromString($pdfFileName, $pdfContent);
+                } catch (\Throwable $e) {
+                    Log::error("Gagal membuat PDF untuk " . $siswa->nama_lengkap . ": " . $e->getMessage());
+                }
+            }
+
+            $zip->close();
+            Log::info("ZIP file berhasil dibuat.");
+
+            // return response()->download($zipPath)->deleteFileAfterSend(true);
+            return response()->json([
+                'message' => 'ZIP file berhasil dibuat.',
+                'file' => asset('storage/transkrip/' . $zipFilename), // jika kamu ingin share URL file-nya
+                'filename' => $zipFilename,
+            ]);
+        } else {
+            Log::error("Gagal membuka ZIP archive.");
+            return response()->json(['message' => 'Gagal membuat ZIP file.'], 500);
+        }
+    }
+
 }

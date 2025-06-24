@@ -111,7 +111,7 @@
         }
 
         .content {
-            margin-top: 70px;
+            margin-top: 80px;
             /* agar konten turun setelah kop */
             position: relative;
             z-index: 1;
@@ -157,8 +157,8 @@
         <div class="biodata">
             <div><span class="label">Satuan Pendidikan</span>: {{ $schoolConfig->nama_sekolah ?? '-' }}</div>
             <div><span class="label">Nomor Pokok Sekolah Nasional</span>: {{ $schoolConfig->npsn ?? '-' }}</div>
-            <div><span class="label">Nama Lengkap</span>: {{ $siswa->nama_lengkap }}</div>
-            <div><span class="label">Tempat dan Tanggal Lahir</span>: {{ $siswa->tempat_lahir }},
+            <div><span class="label">Nama Lengkap</span>: {{ ucwords(strtolower($siswa->nama_lengkap)) }}</div>
+            <div><span class="label">Tempat dan Tanggal Lahir</span>: {{ ucwords(strtolower($siswa->tempat_lahir)) }},
                 {{ \Carbon\Carbon::parse($siswa->tanggal_lahir)->translatedFormat('d F Y') }}</div>
             <div><span class="label">Nomor Induk Siswa Nasional</span>: {{ $siswa->nisn }}</div>
             <div><span class="label">Nomor Ijazah</span>: {{ $siswa->nomor_ijazah }}</div>

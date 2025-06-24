@@ -91,6 +91,7 @@ Route::prefix('transkrip-nilai')->middleware('auth:sanctum')->group(function () 
 
     Route::post('/{siswa}/generate-pdf', [TranskripNilaiController::class, 'generateAndStorePdf']);
     Route::get('/{siswa}/download-pdf', [TranskripNilaiController::class, 'downloadStoredPdf']);
+    Route::get('/cetak-masal', [TranskripNilaiController::class, 'cetakMasal']);
 });
 
 Route::prefix('school-config')->middleware('auth:sanctum')->group(function () {
